@@ -9,4 +9,3 @@ This is a simple Django API that will eventually be integrated into a CI/CD pipe
 - Docker
 - PostgreSQL
 
-## Architecture Diagram
