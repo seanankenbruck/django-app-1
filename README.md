@@ -5,3 +5,6 @@ This is a simple Django API that will eventually be integrated into a CI/CD pipe
 ## Technology Stack
 
 - Python
+- Django REST Framework
+- Docker
+- PostgreSQL
