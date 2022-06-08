@@ -8,3 +8,5 @@ This is a simple Django API that will eventually be integrated into a CI/CD pipe
 - Django REST Framework
 - Docker
 - PostgreSQL
+
+## Architecture Diagram
