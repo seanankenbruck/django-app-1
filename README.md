@@ -9,3 +9,10 @@ This is a simple Django API that will eventually be integrated into a CI/CD pipe
 - Docker
 - PostgreSQL
 
+## Design Document
+
+Coming Soon!
+
+## Data Model
+
+Coming Soon!
