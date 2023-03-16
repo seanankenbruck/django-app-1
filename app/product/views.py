@@ -29,4 +29,3 @@ class ProductViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Create a new product"""
         serializer.save(user=self.request.user)
-

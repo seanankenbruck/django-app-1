@@ -74,12 +74,12 @@ class ModelTests(TestCase):
             password=password,
         )
         product = models.Product.objects.create(
-            user = user,
-            title = "Sample Product",
-            description = "Test product model",
-            price = Decimal('5.00'),
-            image_title = "Image1",
-            image = "image.jpg"
+            user=user,
+            title="Sample Product",
+            description="Test product model",
+            price=Decimal('5.00'),
+            image_title="Image1",
+            image="image.jpg"
         )
 
         self.assertEqual(str(product), product.title)

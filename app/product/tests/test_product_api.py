@@ -16,6 +16,7 @@ from product.serializers import (
 
 PRODUCTS_URL = reverse('product:product-list')
 
+
 def detail_url(product_id):
     """Return url for specific product"""
     return reverse('product:product-detail', args=[product_id])
@@ -24,16 +25,17 @@ def detail_url(product_id):
 def create_product(user, **params):
     """Create and return a product"""
     defaults = {
-        'title' : 'Sample Product',
+        'title': 'Sample Product',
         'description': 'Test product model',
-        'price' : Decimal('0.01'),
-        'image_title' : 'Image',
-        'image' : 'image.jpg'
+        'price': Decimal('0.01'),
+        'image_title': 'Image',
+        'image': 'image.jpg'
     }
     defaults.update(params)
 
     product = Product.objects.create(user=user, **defaults)
     return product
+
 
 def create_user(**params):
     """Create and return new user"""
@@ -104,11 +106,11 @@ class AuthenticatedProductAPITests(TestCase):
     def test_create_product(self):
         """Test abilty to create a new product entry"""
         payload = {
-            'title' : 'Sample Product',
+            'title': 'Sample Product',
             'description': 'Test product API',
-            'price' : Decimal('0.01'),
-            'image_title' : 'Image',
-            'image' : 'image.jpg'
+            'price': Decimal('0.01'),
+            'image_title': 'Image',
+            'image': 'image.jpg'
         }
         res = self.client.post(PRODUCTS_URL, payload)
 
@@ -146,11 +148,11 @@ class AuthenticatedProductAPITests(TestCase):
         )
 
         payload = {
-            'title' : 'Product udpated',
+            'title': 'Product udpated',
             'description': 'Updated with a PUT',
-            'price' : Decimal('0.02'),
-            'image_title' : 'Image2',
-            'image' : 'image2.jpg'
+            'price': Decimal('0.02'),
+            'image_title': 'Image2',
+            'image': 'image2.jpg'
         }
         url = detail_url(product.id)
         res = self.client.put(url, payload)
@@ -163,7 +165,11 @@ class AuthenticatedProductAPITests(TestCase):
 
     def test_updating_user_returns_error(self):
         """Test changing user on recipe returns error"""
-        rogue_user = create_user(username='rogue1', email='rogue@example.com', password='test123')
+        rogue_user = create_user(
+            username='rogue1',
+            email='rogue@example.com',
+            password='test123'
+        )
         product = create_product(
             user=self.user
         )
@@ -173,6 +179,7 @@ class AuthenticatedProductAPITests(TestCase):
         url = detail_url(product.id)
         res = self.client.patch(url, payload)
         product.refresh_from_db()
+        self.assertIsNotNone(res)
         self.assertEqual(product.user, self.user)
 
     def test_delete_recipe(self):
@@ -187,7 +194,11 @@ class AuthenticatedProductAPITests(TestCase):
 
     def test_delete_other_user_product_error(self):
         """Test attempt to delete other user product returns error"""
-        new_user = create_user(username='user2', email='user2@example.com', password='test123')
+        new_user = create_user(
+            username='user2',
+            email='user2@example.com',
+            password='test123'
+        )
         product = create_product(
             user=new_user
         )
