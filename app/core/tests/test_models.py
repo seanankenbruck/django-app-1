@@ -1,8 +1,10 @@
 """
 Test django models
 """
+from decimal import Decimal
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from core import models
 
 
 class ModelTests(TestCase):
@@ -60,3 +62,24 @@ class ModelTests(TestCase):
         )
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_create_product(self):
+        """Test creating a product is successful."""
+        username = 'test1'
+        email = 'test@example.com'
+        password = 'password@1234'
+        user = get_user_model().objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+        )
+        product = models.Product.objects.create(
+            user=user,
+            title="Sample Product",
+            description="Test product model",
+            price=Decimal('5.00'),
+            image_title="Image1",
+            image="image.jpg"
+        )
+
+        self.assertEqual(str(product), product.title)
