@@ -7,7 +7,10 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from core.models import Product
+from core.models import (
+    Product,
+    Tag
+)
 from product.serializers import (
     ProductSerializer,
     ProductDetailSerializer
@@ -206,3 +209,93 @@ class AuthenticatedProductAPITests(TestCase):
         res = self.client.delete(url)
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue(Product.objects.filter(id=product.id).exists())
+
+    def test_create_product_with_new_tag(self):
+        """Test creating a product with new tag"""
+        payload = {
+            'title': 'Sample Product',
+            'description': 'Test product tags',
+            'price': Decimal('0.01'),
+            'image_title': 'Image',
+            'image': 'image.jpg',
+            'tags': [{'name': 'Tag1'}, {'name': 'Tag2'}]
+        }
+        res = self.client.post(PRODUCTS_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        products = Product.objects.filter(user=self.user)
+        self.assertEqual(products.count(), 1)
+        product = products[0]
+        self.assertEqual(product.tags.count(), 2)
+        for tag in payload['tags']:
+            exists = product.tags.filter(
+                name=tag['name'],
+                user=self.user
+            ).exists()
+            self.assertTrue(exists)
+
+    def test_create_product_with_existing_tag(self):
+        """Test creating a product with existing tag"""
+        test_tag = Tag.objects.create(user=self.user, name='TestTag1')
+        payload = {
+            'title': 'Sample Product',
+            'description': 'Test product tags',
+            'price': Decimal('0.01'),
+            'image_title': 'Image',
+            'image': 'image.jpg',
+            'tags': [{'name': 'TestTag1'}, {'name': 'TestTag2'}]
+        }
+        res = self.client.post(PRODUCTS_URL, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        products = Product.objects.filter(user=self.user)
+        self.assertEqual(products.count(), 1)
+        product = products[0]
+        self.assertEqual(product.tags.count(), 2)
+        self.assertIn(test_tag, product.tags.all())
+        for tag in payload['tags']:
+            exists = product.tags.filter(
+                name=tag['name'],
+                user=self.user
+            ).exists()
+            self.assertTrue(exists)
+
+    def test_create_tag_on_update(self):
+        """Test creating tag when updating a product."""
+        product = create_product(user=self.user)
+
+        payload = {'tags': [{'name': 'PatchTag'}]}
+        url = detail_url(product.id)
+        res = self.client.patch(url, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        new_tag = Tag.objects.get(user=self.user, name='PatchTag')
+        self.assertIn(new_tag, product.tags.all())
+
+    def test_update_product_assign_tag(self):
+        """Test assign existing tag when updating a product"""
+        tag = Tag.objects.create(user=self.user, name='ProductUpdate')
+        product = create_product(user=self.user)
+        product.tags.add(tag)
+
+        new_tag = Tag.objects.create(user=self.user, name='ProductUpdate2')
+        payload = {'tags': [{'name': 'ProductUpdate2'}]}
+        url = detail_url(product.id)
+        res = self.client.patch(url, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(new_tag, product.tags.all())
+        self.assertNotIn(tag, product.tags.all())
+
+    def test_clear_product_tags(self):
+        """Test clear all tags for a product"""
+        tag = Tag.objects.create(user=self.user, name='DeleteThis')
+        product = create_product(user=self.user)
+        product.tags.add(tag)
+
+        payload = {'tags': []}
+        url = detail_url(product.id)
+        res = self.client.patch(url, payload, format='json')
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(product.tags.count(), 0)
