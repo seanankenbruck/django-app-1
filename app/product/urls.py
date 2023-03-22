@@ -11,6 +11,7 @@ from product import views
 
 router = DefaultRouter()
 router.register('products', views.ProductViewSet)
+router.register('tags', views.TagViewSet)
 
 app_name = 'product'
 
