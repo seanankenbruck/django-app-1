@@ -2,6 +2,9 @@
 Tests for Product APIs
 """
 from decimal import Decimal
+import tempfile
+import os
+from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -24,15 +27,16 @@ def detail_url(product_id):
     """Return url for specific product"""
     return reverse('product:product-detail', args=[product_id])
 
+def image_upload_url(product_id):
+    """Create and return an image upload url"""
+    return reverse('product:product-upload-image', args=[product_id])
 
 def create_product(user, **params):
     """Create and return a product"""
     defaults = {
         'title': 'Sample Product',
         'description': 'Test product model',
-        'price': Decimal('0.01'),
-        'image_title': 'Image',
-        'image': 'image.jpg'
+        'price': Decimal('0.01')
     }
     defaults.update(params)
 
@@ -111,9 +115,7 @@ class AuthenticatedProductAPITests(TestCase):
         payload = {
             'title': 'Sample Product',
             'description': 'Test product API',
-            'price': Decimal('0.01'),
-            'image_title': 'Image',
-            'image': 'image.jpg'
+            'price': Decimal('0.01')
         }
         res = self.client.post(PRODUCTS_URL, payload)
 
@@ -125,22 +127,18 @@ class AuthenticatedProductAPITests(TestCase):
 
     def test_patch_product(self):
         """Partial update of a product"""
-        original_image = 'image1.jpeg'
         product = create_product(
             user=self.user,
             title='Patch product test',
-            image=original_image
         )
 
         payload = {
-            'image': 'image1.jpg',
             'title': 'Product patched'}
         url = detail_url(product.id)
         res = self.client.patch(url, payload)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         product.refresh_from_db()
-        self.assertEqual(product.image, payload['image'])
         self.assertEqual(product.title, payload['title'])
         self.assertEqual(product.user, self.user)
 
@@ -153,9 +151,7 @@ class AuthenticatedProductAPITests(TestCase):
         payload = {
             'title': 'Product udpated',
             'description': 'Updated with a PUT',
-            'price': Decimal('0.02'),
-            'image_title': 'Image2',
-            'image': 'image2.jpg'
+            'price': Decimal('0.02')
         }
         url = detail_url(product.id)
         res = self.client.put(url, payload)
@@ -216,8 +212,6 @@ class AuthenticatedProductAPITests(TestCase):
             'title': 'Sample Product',
             'description': 'Test product tags',
             'price': Decimal('0.01'),
-            'image_title': 'Image',
-            'image': 'image.jpg',
             'tags': [{'name': 'Tag1'}, {'name': 'Tag2'}]
         }
         res = self.client.post(PRODUCTS_URL, payload, format='json')
@@ -241,8 +235,6 @@ class AuthenticatedProductAPITests(TestCase):
             'title': 'Sample Product',
             'description': 'Test product tags',
             'price': Decimal('0.01'),
-            'image_title': 'Image',
-            'image': 'image.jpg',
             'tags': [{'name': 'TestTag1'}, {'name': 'TestTag2'}]
         }
         res = self.client.post(PRODUCTS_URL, payload, format='json')
@@ -299,3 +291,43 @@ class AuthenticatedProductAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(product.tags.count(), 0)
+
+
+class ImageUploadTests(TestCase):
+    """Test for uploading images"""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = create_user(
+            username='test1',
+            email='test@example.com',
+            password='password@1234',
+        )
+        self.client.force_authenticate(self.user)
+        self.product = create_product(user=self.user)
+
+    def tearDown(self):
+        self.product.image.delete()
+
+    def test_upload_image(self):
+        """Test upload of image to product"""
+        url = image_upload_url(self.product.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB', (10, 10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+            payload = {'image': image_file}
+            res = self.client.post(url, payload, format='multipart')
+
+        self.product.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.product.image.path))
+
+    def test_image_upload_bad_request(self):
+        """Test bad request for image upload"""
+        url = image_upload_url(self.product.id)
+        payload = {'image': 'thisisnotanimage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
