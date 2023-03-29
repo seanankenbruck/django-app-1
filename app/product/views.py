@@ -1,6 +1,12 @@
 """
 Product API Views
 """
+from drf_spectacular.utils import (
+    extend_schema_view,
+    extend_schema,
+    OpenApiParameter,
+    OpenApiTypes
+)
 from rest_framework import (
     viewsets,
     mixins,
@@ -16,7 +22,17 @@ from core.models import (
 )
 from product import serializers
 
-
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'tags',
+                OpenApiTypes.STR,
+                description='Comma separated list of tag IDs to filter',
+            )
+        ]
+    )
+)
 class ProductViewSet(viewsets.ModelViewSet):
     """View for product APIs"""
     serializer_class = serializers.ProductDetailSerializer
@@ -24,9 +40,21 @@ class ProductViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
+    def _params_to_int(self, query_string):
+        """Convert list of strings to integers"""
+        return [int(x) for x in query_string.split(',')]
+
     def get_queryset(self):
         """Retrieve products for authenticated user"""
-        return self.queryset.filter(user=self.request.user).order_by('-id')
+        tags = self.request.query_params.get('tags')
+        queryset = self.queryset
+        if tags:
+            tag_ids = self._params_to_int(tags)
+            queryset = queryset.filter(tags__id__in=tag_ids)
+
+        return queryset.filter(
+            user=self.request.user
+        ).order_by('-id').distinct()
 
     def get_serializer_class(self):
         """Return serializer class for request"""
