@@ -23,7 +23,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'title', 'price', 'image_title', 'image', 'tags']
+        fields = ['id', 'title', 'price', 'tags']
         read_only_fields = ['id']
 
     def _get_or_create_tags(self, tags, product):
@@ -62,4 +62,14 @@ class ProductDetailSerializer(ProductSerializer):
     """Serializer for product detail"""
 
     class Meta(ProductSerializer.Meta):
-        fields = ProductSerializer.Meta.fields + ['description']
+        fields = ProductSerializer.Meta.fields + ['description', 'image']
+
+
+class ProductImageSerializer(serializers.ModelSerializer):
+    """Serializer for images"""
+
+    class Meta:
+        model = Product
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image': {'required': 'True'}}
