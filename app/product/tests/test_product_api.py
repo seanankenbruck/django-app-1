@@ -27,9 +27,11 @@ def detail_url(product_id):
     """Return url for specific product"""
     return reverse('product:product-detail', args=[product_id])
 
+
 def image_upload_url(product_id):
     """Create and return an image upload url"""
     return reverse('product:product-upload-image', args=[product_id])
+
 
 def create_product(user, **params):
     """Create and return a product"""

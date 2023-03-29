@@ -11,6 +11,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+
 def product_image_file_path(instance, filename):
     """Generate file path for new product image"""
     ext = os.path.splitext(filename)[1]
