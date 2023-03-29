@@ -62,14 +62,14 @@ class ProductDetailSerializer(ProductSerializer):
     """Serializer for product detail"""
 
     class Meta(ProductSerializer.Meta):
-        fields = ProductSerializer.Meta.fields + ['description']
+        fields = ProductSerializer.Meta.fields + ['description', 'image']
 
 
-# class ProductImageSerializer(serializers.ModelSerializer):
-#     """Serializer for images"""
+class ProductImageSerializer(serializers.ModelSerializer):
+    """Serializer for images"""
 
-#     class Meta:
-#         model = Product
-#         fields = ['id', 'image']
-#         read_only_fields = ['id']
-#         extra_kwargs = {'image': {'required': 'True'}}
+    class Meta:
+        model = Product
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        extra_kwargs = {'image': {'required': 'True'}}

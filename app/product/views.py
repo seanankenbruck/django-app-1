@@ -32,8 +32,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         """Return serializer class for request"""
         if self.action == 'list':
             return serializers.ProductSerializer
-        # elif self.action == 'upload_image':
-        #     return serializers.ProductImageSerializer
+        elif self.action == 'upload_image':
+            return serializers.ProductImageSerializer
 
         return self.serializer_class
 
@@ -41,17 +41,17 @@ class ProductViewSet(viewsets.ModelViewSet):
         """Create a new product"""
         serializer.save(user=self.request.user)
 
-    # @action(methods=['POST'], detail=True, url_path='upload-image')
-    # def upload_image(self, request, pk=None):
-    #     """Upload an image to product"""
-    #     product = self.get_object()
-    #     serializer = self.get_serializer(product, data=request.data)
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to product"""
+        product = self.get_object()
+        serializer = self.get_serializer(product, data=request.data)
 
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(
