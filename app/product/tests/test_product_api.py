@@ -165,7 +165,7 @@ class AuthenticatedProductAPITests(TestCase):
         self.assertEqual(product.user, self.user)
 
     def test_updating_user_returns_error(self):
-        """Test changing user on recipe returns error"""
+        """Test changing user on product returns error"""
         rogue_user = create_user(
             username='rogue1',
             email='rogue@example.com',
@@ -183,8 +183,8 @@ class AuthenticatedProductAPITests(TestCase):
         self.assertIsNotNone(res)
         self.assertEqual(product.user, self.user)
 
-    def test_delete_recipe(self):
-        """Test ability to delete recipe"""
+    def test_delete_product(self):
+        """Test ability to delete product"""
         product = create_product(
             user=self.user
         )
@@ -293,6 +293,26 @@ class AuthenticatedProductAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(product.tags.count(), 0)
+
+    def test_filter_tags(self):
+        """Test filtering tags"""
+        product1 = create_product(user=self.user, title='Product 1')
+        product2 = create_product(user=self.user, title='Product 2')
+        tag1 = Tag.objects.create(user=self.user, name='Tag 1')
+        tag2 = Tag.objects.create(user=self.user, name='Tag 2')
+        product1.tags.add(tag1)
+        product2.tags.add(tag2)
+        product3 = create_product(user=self.user, title='Product3')
+
+        params = {'tags': f'{tag1.id},{tag2.id}'}
+        res = self.client.get(PRODUCTS_URL, params)
+
+        serialized1 = ProductSerializer(product1)
+        serialized2 = ProductSerializer(product2)
+        serialized3 = ProductSerializer(product3)
+        self.assertIn(serialized1.data, res.data)
+        self.assertIn(serialized2.data, res.data)
+        self.assertNotIn(serialized3.data, res.data)
 
 
 class ImageUploadTests(TestCase):
