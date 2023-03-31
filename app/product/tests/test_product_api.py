@@ -165,7 +165,7 @@ class AuthenticatedProductAPITests(TestCase):
         self.assertEqual(product.user, self.user)
 
     def test_updating_user_returns_error(self):
-        """Test changing user on recipe returns error"""
+        """Test changing user on product returns error"""
         rogue_user = create_user(
             username='rogue1',
             email='rogue@example.com',
@@ -183,8 +183,8 @@ class AuthenticatedProductAPITests(TestCase):
         self.assertIsNotNone(res)
         self.assertEqual(product.user, self.user)
 
-    def test_delete_recipe(self):
-        """Test ability to delete recipe"""
+    def test_delete_product(self):
+        """Test ability to delete product"""
         product = create_product(
             user=self.user
         )
